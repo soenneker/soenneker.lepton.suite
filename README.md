@@ -37,14 +37,3 @@ public abstract class MyAsyncComponentBase : LeptonCancellable
     }
 }
 ```
-
-Build group-style helpers without adding cascading behavior yet:
-
-```csharp
-using Soenneker.Lepton.Abstract;
-
-public abstract class MyGroupBase<TChild> : LeptonGroup<TChild>
-{
-    protected IReadOnlyList<TChild> Items => Children;
-}
-```

@@ -13,8 +13,8 @@ internal sealed class TestIdentifiableElement : LeptonIdentifiableElement
         AdditionalAttributes = additionalAttributes;
     }
 
-    public Dictionary<string, object> Attributes(params (string Key, object? Value)[] values)
+    public Dictionary<string, object> Attributes(string key, object? value)
     {
-        return BuildAttributes(values);
+        return BuildAttributes(key, value);
     }
 }

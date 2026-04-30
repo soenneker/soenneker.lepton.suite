@@ -71,7 +71,7 @@ public sealed class LeptonComponentTests : UnitTest
         var component = new TestIdentifiableElement();
         component.Configure("primary", "base", null, null);
 
-        Dictionary<string, object> attributes = component.Attributes(("data-state", "open"));
+        Dictionary<string, object> attributes = component.Attributes("data-state", "open");
 
         attributes["id"].Should().Be("primary");
         attributes["class"].Should().Be("base");
