@@ -1,3 +1,4 @@
+using Soenneker.Atomics.Resources;
 using Soenneker.Lepton.Suite.Abstract;
 
 namespace Soenneker.Lepton.Suite;
@@ -5,25 +6,35 @@ namespace Soenneker.Lepton.Suite;
 /// <inheritdoc cref="ILeptonCancellable" />
 public abstract class LeptonCancellable : LeptonDisposable, ILeptonCancellable
 {
-    private CancellationTokenSource? _cancellationTokenSource;
+    private readonly AtomicResource<CancellationTokenSource> _cancellationTokenSource;
 
-    protected CancellationToken CancellationToken => (_cancellationTokenSource ??= new CancellationTokenSource()).Token;
+    protected LeptonCancellable()
+    {
+        _cancellationTokenSource = new AtomicResource<CancellationTokenSource>(
+            factory: static () => new CancellationTokenSource(),
+            teardown: static cancellationTokenSource =>
+            {
+                if (!cancellationTokenSource.IsCancellationRequested)
+                    cancellationTokenSource.Cancel();
 
-    protected bool IsCancellationRequested => _cancellationTokenSource?.IsCancellationRequested == true;
+                cancellationTokenSource.Dispose();
+
+                return ValueTask.CompletedTask;
+            });
+    }
+
+    protected CancellationToken CancellationToken => _cancellationTokenSource.GetOrCreate()?.Token ?? CancellationToken.None;
+
+    protected bool IsCancellationRequested => _cancellationTokenSource.TryGet()?.IsCancellationRequested == true;
 
     public override ValueTask DisposeAsync()
     {
-        CancellationTokenSource? cancellationTokenSource = _cancellationTokenSource;
+        return DisposeAsyncCore();
+    }
 
-        if (cancellationTokenSource is not null)
-        {
-            if (!cancellationTokenSource.IsCancellationRequested)
-                cancellationTokenSource.Cancel();
-
-            cancellationTokenSource.Dispose();
-            _cancellationTokenSource = null;
-        }
-
-        return base.DisposeAsync();
+    private async ValueTask DisposeAsyncCore()
+    {
+        await _cancellationTokenSource.DisposeAsync().ConfigureAwait(false);
+        await base.DisposeAsync().ConfigureAwait(false);
     }
 }

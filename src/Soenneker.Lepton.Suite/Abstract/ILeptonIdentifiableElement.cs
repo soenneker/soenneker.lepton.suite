@@ -1,7 +1,7 @@
 namespace Soenneker.Lepton.Suite.Abstract;
 
 /// <summary>
-/// Defines the contract for Lepton element base types with an optional identifier.
+/// Defines the contract for identifiable Lepton element base types.
 /// </summary>
 public interface ILeptonIdentifiableElement : ILeptonElement
 {

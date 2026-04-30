@@ -6,23 +6,19 @@ namespace Soenneker.Lepton.Suite;
 /// <inheritdoc cref="ILeptonIdentifiableElement" />
 public abstract class LeptonIdentifiableElement : LeptonElement, ILeptonIdentifiableElement
 {
+    /// <exclude />
     [Parameter]
     public string? Id { get; set; }
 
-    protected IReadOnlyDictionary<string, object>? EffectiveAttributes
+    /// <exclude />
+    protected IReadOnlyDictionary<string, object> EffectiveAttributes => BuildAttributes();
+
+    protected new Dictionary<string, object> BuildAttributes(params (string Key, object? Value)[] values)
     {
-        get
-        {
-            if (Id is null)
-                return Attributes;
+        var attributes = base.BuildAttributes(values);
 
-            Dictionary<string, object> attributes = Attributes is null
-                ? new Dictionary<string, object>(StringComparer.Ordinal)
-                : new Dictionary<string, object>(Attributes, StringComparer.Ordinal);
+        SetAttribute(attributes, "id", Id);
 
-            attributes["id"] = Id;
-
-            return attributes;
-        }
+        return attributes;
     }
 }
