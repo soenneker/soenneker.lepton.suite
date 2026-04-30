@@ -1,12 +1,6 @@
 namespace Soenneker.Lepton.Suite.Abstract;
 
 /// <summary>
-/// Defines the contract for disposable Lepton component base types that accept unmatched attributes and child content.
+/// Defines the contract for disposable Lepton element base types that accept child content.
 /// </summary>
-public interface ILeptonDisposableContentElement : ILeptonDisposable, ILeptonContent
-{
-    /// <summary>
-    /// Gets or sets unmatched attributes applied to the component element.
-    /// </summary>
-    IReadOnlyDictionary<string, object>? Attributes { get; set; }
-}
+public interface ILeptonDisposableContentElement : ILeptonDisposable, ILeptonContentElement;

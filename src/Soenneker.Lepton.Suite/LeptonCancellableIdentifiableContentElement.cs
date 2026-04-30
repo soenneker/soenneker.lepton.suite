@@ -3,23 +3,23 @@ using Soenneker.Lepton.Suite.Abstract;
 
 namespace Soenneker.Lepton.Suite;
 
-/// <inheritdoc cref="ILeptonDisposableIdentifiableContentElement" />
-public abstract class LeptonDisposableIdentifiableContentElement : LeptonDisposable, ILeptonDisposableIdentifiableContentElement
+/// <inheritdoc cref="ILeptonCancellableIdentifiableContentElement" />
+public abstract class LeptonCancellableIdentifiableContentElement : LeptonCancellable, ILeptonCancellableIdentifiableContentElement
 {
-    [Parameter]
-    public string? Id { get; set; }
-
     [Parameter]
     public string? Class { get; set; }
 
     [Parameter]
     public string? Style { get; set; }
 
-    [Parameter]
-    public RenderFragment? ChildContent { get; set; }
-
     [Parameter(CaptureUnmatchedValues = true)]
     public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
+
+    [Parameter]
+    public string? Id { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
 
     protected IReadOnlyDictionary<string, object> EffectiveAttributes => BuildAttributes();
 
