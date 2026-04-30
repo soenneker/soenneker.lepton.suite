@@ -28,8 +28,8 @@ internal sealed class LeptonCancellationResource : IAsyncDisposable
 
     internal bool IsCancellationRequested => _source.TryGet()?.IsCancellationRequested == true;
 
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
     {
-        await _source.DisposeAsync().NoSync();
+        return _source.DisposeAsync();
     }
 }
