@@ -1,4 +1,5 @@
 using Soenneker.Atomics.Resources;
+using Soenneker.Extensions.ValueTask;
 using Soenneker.Lepton.Suite.Abstract;
 
 namespace Soenneker.Lepton.Suite;
@@ -12,29 +13,28 @@ public abstract class LeptonCancellable : LeptonDisposable, ILeptonCancellable
     {
         _cancellationTokenSource = new AtomicResource<CancellationTokenSource>(
             factory: static () => new CancellationTokenSource(),
-            teardown: static cancellationTokenSource =>
+            teardown: static source =>
             {
-                if (!cancellationTokenSource.IsCancellationRequested)
-                    cancellationTokenSource.Cancel();
+                if (!source.IsCancellationRequested)
+                    source.Cancel();
 
-                cancellationTokenSource.Dispose();
+                source.Dispose();
 
                 return ValueTask.CompletedTask;
             });
+
+        _cancellationTokenSource.GetOrCreate();
     }
 
-    protected CancellationToken CancellationToken => _cancellationTokenSource.GetOrCreate()?.Token ?? CancellationToken.None;
+    protected CancellationToken CancellationToken =>
+        _cancellationTokenSource.TryGet()?.Token ?? CancellationToken.None;
 
-    protected bool IsCancellationRequested => _cancellationTokenSource.TryGet()?.IsCancellationRequested == true;
+    protected bool IsCancellationRequested =>
+        _cancellationTokenSource.TryGet()?.IsCancellationRequested == true;
 
-    public override ValueTask DisposeAsync()
+    public override async ValueTask DisposeAsync()
     {
-        return DisposeAsyncCore();
-    }
-
-    private async ValueTask DisposeAsyncCore()
-    {
-        await _cancellationTokenSource.DisposeAsync().ConfigureAwait(false);
-        await base.DisposeAsync().ConfigureAwait(false);
+        await _cancellationTokenSource.DisposeAsync().NoSync();
+        await base.DisposeAsync().NoSync();
     }
 }
