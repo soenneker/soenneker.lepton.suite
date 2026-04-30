@@ -11,7 +11,7 @@ public abstract class LeptonIdentifiableElement : LeptonElement, ILeptonIdentifi
 
     protected IReadOnlyDictionary<string, object> EffectiveAttributes => BuildAttributes();
 
-    protected new Dictionary<string, object> BuildAttributes()
+    protected override Dictionary<string, object> BuildAttributes()
     {
         Dictionary<string, object> attributes = base.BuildAttributes();
 
@@ -20,7 +20,7 @@ public abstract class LeptonIdentifiableElement : LeptonElement, ILeptonIdentifi
         return attributes;
     }
 
-    protected new Dictionary<string, object> BuildAttributes(string key, object? value)
+    protected override Dictionary<string, object> BuildAttributes(string key, object? value)
     {
         Dictionary<string, object> attributes = base.BuildAttributes(key, value);
 
@@ -29,7 +29,7 @@ public abstract class LeptonIdentifiableElement : LeptonElement, ILeptonIdentifi
         return attributes;
     }
 
-    protected new Dictionary<string, object> BuildAttributes(string key1, object? value1, string key2, object? value2)
+    protected override Dictionary<string, object> BuildAttributes(string key1, object? value1, string key2, object? value2)
     {
         Dictionary<string, object> attributes = base.BuildAttributes(key1, value1, key2, value2);
 
@@ -38,7 +38,16 @@ public abstract class LeptonIdentifiableElement : LeptonElement, ILeptonIdentifi
         return attributes;
     }
 
-    protected new Dictionary<string, object> BuildAttributes(ReadOnlySpan<KeyValuePair<string, object?>> values)
+    protected override Dictionary<string, object> BuildAttributes(ReadOnlySpan<KeyValuePair<string, object?>> values)
+    {
+        Dictionary<string, object> attributes = base.BuildAttributes(values);
+
+        SetAttribute(attributes, "id", Id);
+
+        return attributes;
+    }
+
+    protected override Dictionary<string, object> BuildAttributes(params (string Key, object? Value)[] values)
     {
         Dictionary<string, object> attributes = base.BuildAttributes(values);
 

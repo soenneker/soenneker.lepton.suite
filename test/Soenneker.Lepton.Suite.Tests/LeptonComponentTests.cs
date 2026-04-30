@@ -33,6 +33,13 @@ public sealed class LeptonComponentTests : UnitTest
         typeof(ILeptonIdentifiableContentElement).IsAssignableFrom(typeof(ILeptonDisposableIdentifiableContentElement)).Should().BeTrue();
         typeof(ILeptonIdentifiableContentElement).IsAssignableFrom(typeof(ILeptonCancellableIdentifiableContentElement)).Should().BeTrue();
         typeof(ILeptonCancellable).IsAssignableFrom(typeof(ILeptonCancellableIdentifiableContentElement)).Should().BeTrue();
+        typeof(ILeptonContent).IsAssignableFrom(typeof(ILeptonDisposableContent)).Should().BeTrue();
+        typeof(ILeptonDisposable).IsAssignableFrom(typeof(ILeptonDisposableContent)).Should().BeTrue();
+        typeof(ILeptonContent).IsAssignableFrom(typeof(ILeptonCancellableContent)).Should().BeTrue();
+        typeof(ILeptonCancellable).IsAssignableFrom(typeof(ILeptonCancellableContent)).Should().BeTrue();
+        typeof(ILeptonContentElement).IsAssignableFrom(typeof(ILeptonCancellableContentElement)).Should().BeTrue();
+        typeof(ILeptonCancellableContent).IsAssignableFrom(typeof(ILeptonCancellableContentElement)).Should().BeTrue();
+        typeof(ILeptonCancellableContentElement).IsAssignableFrom(typeof(ILeptonCancellableIdentifiableContentElement)).Should().BeTrue();
     }
 
     [Test]
@@ -62,6 +69,68 @@ public sealed class LeptonComponentTests : UnitTest
     }
 
     [Test]
+    public void LeptonDisposableContent_supports_content_and_disposal_without_element_parameters()
+    {
+        var component = new TestDisposableContent();
+
+        typeof(LeptonDisposableContent).GetProperty("ChildContent").Should().NotBeNull();
+        typeof(LeptonDisposableContent).GetProperty("Class").Should().BeNull();
+        typeof(LeptonDisposableContent).GetProperty("Style").Should().BeNull();
+        typeof(LeptonDisposableContent).GetProperty("AdditionalAttributes").Should().BeNull();
+        component.Should().BeAssignableTo<ILeptonDisposableContent>();
+
+        component.DisposeAsync().AsTask().GetAwaiter().GetResult();
+
+        component.Disposed.Should().BeTrue();
+    }
+
+    [Test]
+    public void LeptonCancellableContent_supports_content_and_cancellation_without_element_parameters()
+    {
+        var component = new TestCancellableContent();
+
+        typeof(LeptonCancellableContent).GetProperty("ChildContent").Should().NotBeNull();
+        typeof(LeptonCancellableContent).GetProperty("Class").Should().BeNull();
+        typeof(LeptonCancellableContent).GetProperty("Style").Should().BeNull();
+        typeof(LeptonCancellableContent).GetProperty("AdditionalAttributes").Should().BeNull();
+        component.Should().BeAssignableTo<ILeptonCancellableContent>();
+        component.Should().BeAssignableTo<LeptonDisposableContent>();
+
+        _ = component.Token;
+
+        component.DisposeAsync().AsTask().GetAwaiter().GetResult();
+
+        component.CancellationRequested.Should().BeFalse();
+    }
+
+    [Test]
+    public void LeptonCancellableContentElement_builds_element_attributes()
+    {
+        var component = new TestCancellableContentElement();
+        component.Configure("base", "display:block", new Dictionary<string, object>
+        {
+            ["class"] = "additional",
+            ["style"] = "color:red",
+            ["role"] = "region"
+        });
+
+        _ = component.Token;
+
+        IReadOnlyDictionary<string, object> attributes = component.Effective;
+
+        attributes.Should().NotContainKey("id");
+        attributes["class"].Should().Be("base additional");
+        attributes["style"].Should().Be("display:block; color:red");
+        attributes["role"].Should().Be("region");
+        component.Should().BeAssignableTo<ILeptonCancellableContentElement>();
+        component.Should().BeAssignableTo<LeptonDisposableContentElement>();
+
+        component.DisposeAsync().AsTask().GetAwaiter().GetResult();
+
+        component.CancellationRequested.Should().BeFalse();
+    }
+
+    [Test]
     public void LeptonCancellableIdentifiableContentElement_supports_id_attributes_content_and_cancellation()
     {
         var component = new TestCancellableIdentifiableContentElement();
@@ -82,6 +151,7 @@ public sealed class LeptonComponentTests : UnitTest
         attributes["style"].Should().Be("display:block; color:red");
         attributes["role"].Should().Be("button");
         component.Should().BeAssignableTo<ILeptonCancellableIdentifiableContentElement>();
+        component.Should().BeAssignableTo<LeptonDisposableIdentifiableContentElement>();
 
         component.DisposeAsync().AsTask().GetAwaiter().GetResult();
 
@@ -106,6 +176,7 @@ public sealed class LeptonComponentTests : UnitTest
         attributes["style"].Should().Be("display:block; color:red");
         attributes["role"].Should().Be("region");
         component.Should().BeAssignableTo<ILeptonDisposableContentElement>();
+        component.Should().BeAssignableTo<LeptonDisposableContent>();
         component.Should().BeAssignableTo<ILeptonContentElement>();
     }
 
@@ -127,6 +198,7 @@ public sealed class LeptonComponentTests : UnitTest
         attributes["style"].Should().Be("display:block; color:red");
         attributes["role"].Should().Be("region");
         component.Should().BeAssignableTo<ILeptonDisposableIdentifiableContentElement>();
+        component.Should().BeAssignableTo<LeptonDisposableContentElement>();
         component.Should().BeAssignableTo<ILeptonIdentifiableContentElement>();
     }
 
