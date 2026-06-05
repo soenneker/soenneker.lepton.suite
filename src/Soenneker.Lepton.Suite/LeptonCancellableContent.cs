@@ -12,6 +12,10 @@ public abstract class LeptonCancellableContent : LeptonDisposableContent, ILepto
 
     protected bool IsCancellationRequested => _cancellation.IsCancellationRequested;
 
+    /// <summary>
+    /// Asynchronously releases resources used by the current instance.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     public override async ValueTask DisposeAsync()
     {
         await _cancellation.DisposeAsync().NoSync();
