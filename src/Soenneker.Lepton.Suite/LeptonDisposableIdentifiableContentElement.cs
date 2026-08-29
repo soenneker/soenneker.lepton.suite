@@ -3,7 +3,7 @@ using Soenneker.Lepton.Suite.Abstract;
 
 namespace Soenneker.Lepton.Suite;
 
-/// <inheritdoc cref="ILeptonDisposableIdentifiableContentElement" />
+/// <inheritdoc cref="ILeptonDisposableIdentifiableContentElement"/>
 public abstract class LeptonDisposableIdentifiableContentElement : LeptonDisposableContentElement, ILeptonDisposableIdentifiableContentElement
 {
     [Parameter]

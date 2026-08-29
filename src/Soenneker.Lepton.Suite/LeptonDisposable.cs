@@ -3,7 +3,7 @@ using Soenneker.Lepton.Suite.Abstract;
 
 namespace Soenneker.Lepton.Suite;
 
-/// <inheritdoc cref="ILeptonDisposable" />
+/// <inheritdoc cref="ILeptonDisposable"/>
 public abstract class LeptonDisposable : LeptonComponent, ILeptonDisposable
 {
     private ValueAtomicBool _isDisposed;
