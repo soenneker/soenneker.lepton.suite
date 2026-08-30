@@ -13,10 +13,15 @@ internal sealed class LeptonCancellationResource : IAsyncDisposable
             factory: static () => new CancellationTokenSource(),
             teardown: static source =>
             {
-                if (!source.IsCancellationRequested)
-                    source.Cancel();
-
-                source.Dispose();
+                try
+                {
+                    if (!source.IsCancellationRequested)
+                        source.Cancel();
+                }
+                finally
+                {
+                    source.Dispose();
+                }
 
                 return ValueTask.CompletedTask;
             });

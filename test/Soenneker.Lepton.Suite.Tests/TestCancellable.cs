@@ -8,4 +8,6 @@ internal sealed class TestCancellable : LeptonCancellable
     public CancellationToken Token => CancellationToken;
 
     public bool CancellationRequested => IsCancellationRequested;
+
+    public bool Disposed => IsDisposed;
 }

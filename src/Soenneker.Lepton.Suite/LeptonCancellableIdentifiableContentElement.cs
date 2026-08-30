@@ -4,7 +4,6 @@ using Soenneker.Lepton.Suite.Abstract;
 
 namespace Soenneker.Lepton.Suite;
 
-/// <inheritdoc cref="ILeptonCancellableIdentifiableContentElement"/>
 public abstract class LeptonCancellableIdentifiableContentElement : LeptonDisposableIdentifiableContentElement, ILeptonCancellableIdentifiableContentElement
 {
     private readonly LeptonCancellationResource _cancellation = new();
@@ -19,7 +18,13 @@ public abstract class LeptonCancellableIdentifiableContentElement : LeptonDispos
     /// <returns>A task that represents the asynchronous operation.</returns>
     public override async ValueTask DisposeAsync()
     {
-        await _cancellation.DisposeAsync().NoSync();
-        await base.DisposeAsync().NoSync();
+        try
+        {
+            await _cancellation.DisposeAsync().NoSync();
+        }
+        finally
+        {
+            await base.DisposeAsync().NoSync();
+        }
     }
 }

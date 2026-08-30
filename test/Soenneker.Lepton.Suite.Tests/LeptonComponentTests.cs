@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Threading;
 using AwesomeAssertions;
 using Soenneker.Lepton.Suite;
 using Soenneker.Lepton.Suite.Abstract;
@@ -66,6 +68,27 @@ public sealed class LeptonComponentTests : UnitTest
         component.DisposeAsync().AsTask().GetAwaiter().GetResult();
 
         component.CancellationRequested.Should().BeFalse();
+    }
+
+    [Test]
+    public void LeptonCancellable_completes_disposal_when_a_cancellation_callback_throws()
+    {
+        var component = new TestCancellable();
+        CancellationToken token = component.Token;
+        var callbackInvoked = false;
+        using var registration = token.Register(() =>
+        {
+            callbackInvoked = true;
+            throw new InvalidOperationException("callback failure");
+        });
+
+        component.DisposeAsync().AsTask().GetAwaiter().GetResult();
+
+        callbackInvoked.Should().BeTrue();
+        component.Disposed.Should().BeTrue();
+
+        Action accessWaitHandleAfterDisposal = () => _ = token.WaitHandle;
+        accessWaitHandleAfterDisposal.Should().Throw<ObjectDisposedException>();
     }
 
     [Test]
