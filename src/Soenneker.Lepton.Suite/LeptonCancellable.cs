@@ -3,6 +3,7 @@ using Soenneker.Lepton.Suite.Abstract;
 
 namespace Soenneker.Lepton.Suite;
 
+/// <inheritdoc cref="ILeptonCancellable" />
 public abstract class LeptonCancellable : LeptonDisposable, ILeptonCancellable
 {
     private readonly LeptonCancellationResource _cancellation = new();
