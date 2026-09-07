@@ -62,13 +62,24 @@ internal static class LeptonAttributeBuilder
 
     internal static Dictionary<string, object> Build(string? cssClass, string? style, IReadOnlyDictionary<string, object>? additionalAttributes, (string Key, object? Value)[] values, string? id = null)
     {
-        return values.Length switch
+        switch (values.Length)
         {
-            0 => Build(cssClass, style, additionalAttributes, id: id),
-            1 => Build(cssClass, style, additionalAttributes, values[0].Key, values[0].Value, id),
-            2 => Build(cssClass, style, additionalAttributes, values[0].Key, values[0].Value, values[1].Key, values[1].Value, id),
-            _ => Build(cssClass, style, additionalAttributes, ToKeyValuePairs(values), id)
-        };
+            case 0:
+                return Build(cssClass, style, additionalAttributes, id: id);
+            case 1:
+                return Build(cssClass, style, additionalAttributes, values[0].Key, values[0].Value, id);
+            case 2:
+                return Build(cssClass, style, additionalAttributes, values[0].Key, values[0].Value, values[1].Key, values[1].Value, id);
+        }
+
+        Dictionary<string, object> attributes = Create((additionalAttributes?.Count ?? 0) + values.Length, id is null ? 2 : 3);
+        MergeClass(attributes, cssClass);
+        MergeStyle(attributes, style);
+        foreach ((string key, object? value) in values)
+            Set(attributes, key, value);
+        Set(attributes, "id", id);
+        MergeAdditional(attributes, additionalAttributes);
+        return attributes;
     }
 
     internal static void MergeAdditional(Dictionary<string, object> attributes, IReadOnlyDictionary<string, object>? additionalAttributes)
@@ -155,13 +166,5 @@ internal static class LeptonAttributeBuilder
         return new Dictionary<string, object>(additionalCapacity + baseCapacity, StringComparer.OrdinalIgnoreCase);
     }
 
-    private static KeyValuePair<string, object?>[] ToKeyValuePairs((string Key, object? Value)[] values)
-    {
-        var pairs = new KeyValuePair<string, object?>[values.Length];
 
-        for (var i = 0; i < values.Length; i++)
-            pairs[i] = new KeyValuePair<string, object?>(values[i].Key, values[i].Value);
-
-        return pairs;
-    }
 }
