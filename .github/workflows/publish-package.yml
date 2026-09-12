@@ -13,6 +13,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  id-token: write
   contents: write
   packages: write
 
@@ -74,6 +75,12 @@ jobs:
             --no-restore \
             --output ./artifacts
 
+      - name: Log in to NuGet
+        uses: NuGet/login@v1
+        id: nuget-login
+        with:
+          user: soenneker
+
       - name: Publish to NuGet
         shell: bash
         run: |
@@ -85,7 +92,7 @@ jobs:
             set +e
             dotnet nuget push ./artifacts/*.nupkg \
               --source "https://api.nuget.org/v3/index.json" \
-              --api-key "${{ secrets.NUGET__TOKEN }}" \
+              --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}" \
               --skip-duplicate 2>&1 | tee "$output_file"
             exit_code=${PIPESTATUS[0]}
             set -e
@@ -152,7 +159,7 @@ jobs:
       - name: Set Base Href for GitHub Pages
         run: |
           cd test/Soenneker.Lepton.Suite.Demo/bin/Release/net10.0/publish/wwwroot
-          sed -i 's|%BASE_URL%|/soenneker.lepton.suite/|g' index.html || exit 1
+          sed -i 's|<base href="/" />|<base href="/soenneker.lepton.suite/" />|g' index.html || exit 1
 
       - name: Add .nojekyll
         run: touch test/Soenneker.Lepton.Suite.Demo/bin/Release/net10.0/publish/wwwroot/.nojekyll

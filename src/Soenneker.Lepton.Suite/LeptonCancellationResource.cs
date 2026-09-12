@@ -1,5 +1,4 @@
 using Soenneker.Atomics.Resources;
-using Soenneker.Extensions.ValueTask;
 
 namespace Soenneker.Lepton.Suite;
 
@@ -26,10 +25,9 @@ internal sealed class LeptonCancellationResource : IAsyncDisposable
                 return ValueTask.CompletedTask;
             });
 
-        _source.GetOrCreate();
     }
 
-    internal CancellationToken Token => _source.TryGet()?.Token ?? CancellationToken.None;
+    internal CancellationToken Token => _source.GetOrCreate()?.Token ?? CancellationToken.None;
 
     internal bool IsCancellationRequested => _source.TryGet()?.IsCancellationRequested == true;
 

@@ -7,7 +7,7 @@ internal static class LeptonAttributeBuilder
 {
     internal static Dictionary<string, object> Build(string? cssClass, string? style, IReadOnlyDictionary<string, object>? additionalAttributes, string? id = null)
     {
-        Dictionary<string, object> attributes = Create(additionalAttributes?.Count ?? 0, id is null ? 2 : 3);
+        Dictionary<string, object> attributes = Create(additionalAttributes?.Count ?? 0, cssClass, style, id);
 
         MergeClass(attributes, cssClass);
         MergeStyle(attributes, style);
@@ -19,7 +19,7 @@ internal static class LeptonAttributeBuilder
 
     internal static Dictionary<string, object> Build(string? cssClass, string? style, IReadOnlyDictionary<string, object>? additionalAttributes, string key, object? value, string? id = null)
     {
-        Dictionary<string, object> attributes = Create((additionalAttributes?.Count ?? 0) + 1, id is null ? 2 : 3);
+        Dictionary<string, object> attributes = Create((additionalAttributes?.Count ?? 0) + (value is null ? 0 : 1), cssClass, style, id);
 
         MergeClass(attributes, cssClass);
         MergeStyle(attributes, style);
@@ -32,7 +32,7 @@ internal static class LeptonAttributeBuilder
 
     internal static Dictionary<string, object> Build(string? cssClass, string? style, IReadOnlyDictionary<string, object>? additionalAttributes, string key1, object? value1, string key2, object? value2, string? id = null)
     {
-        Dictionary<string, object> attributes = Create((additionalAttributes?.Count ?? 0) + 2, id is null ? 2 : 3);
+        Dictionary<string, object> attributes = Create((additionalAttributes?.Count ?? 0) + (value1 is null ? 0 : 1) + (value2 is null ? 0 : 1), cssClass, style, id);
 
         MergeClass(attributes, cssClass);
         MergeStyle(attributes, style);
@@ -46,7 +46,7 @@ internal static class LeptonAttributeBuilder
 
     internal static Dictionary<string, object> Build(string? cssClass, string? style, IReadOnlyDictionary<string, object>? additionalAttributes, ReadOnlySpan<KeyValuePair<string, object?>> values, string? id = null)
     {
-        Dictionary<string, object> attributes = Create((additionalAttributes?.Count ?? 0) + values.Length, id is null ? 2 : 3);
+        Dictionary<string, object> attributes = Create((additionalAttributes?.Count ?? 0) + values.Length, cssClass, style, id);
 
         MergeClass(attributes, cssClass);
         MergeStyle(attributes, style);
@@ -72,7 +72,7 @@ internal static class LeptonAttributeBuilder
                 return Build(cssClass, style, additionalAttributes, values[0].Key, values[0].Value, values[1].Key, values[1].Value, id);
         }
 
-        Dictionary<string, object> attributes = Create((additionalAttributes?.Count ?? 0) + values.Length, id is null ? 2 : 3);
+        Dictionary<string, object> attributes = Create((additionalAttributes?.Count ?? 0) + values.Length, cssClass, style, id);
         MergeClass(attributes, cssClass);
         MergeStyle(attributes, style);
         foreach ((string key, object? value) in values)
@@ -87,25 +87,37 @@ internal static class LeptonAttributeBuilder
         if (additionalAttributes is not { Count: > 0 })
             return;
 
-        foreach ((string key, object? value) in additionalAttributes)
+        // Enumerating the concrete dictionary keeps its struct enumerator off the heap.
+        if (additionalAttributes is Dictionary<string, object> dictionary)
         {
-            if (value is null)
-                continue;
+            foreach (KeyValuePair<string, object> pair in dictionary)
+                MergeAdditionalAttribute(attributes, pair.Key, pair.Value);
 
-            if (key.Equals("class", StringComparison.OrdinalIgnoreCase))
-            {
-                MergeClass(attributes, value as string ?? value.ToString());
-                continue;
-            }
-
-            if (key.Equals("style", StringComparison.OrdinalIgnoreCase))
-            {
-                MergeStyle(attributes, value as string ?? value.ToString());
-                continue;
-            }
-
-            attributes[key] = value;
+            return;
         }
+
+        foreach ((string key, object? value) in additionalAttributes)
+            MergeAdditionalAttribute(attributes, key, value);
+    }
+
+    private static void MergeAdditionalAttribute(Dictionary<string, object> attributes, string key, object? value)
+    {
+        if (value is null)
+            return;
+
+        if (key.Equals("class", StringComparison.OrdinalIgnoreCase))
+        {
+            MergeClass(attributes, value as string ?? value.ToString());
+            return;
+        }
+
+        if (key.Equals("style", StringComparison.OrdinalIgnoreCase))
+        {
+            MergeStyle(attributes, value as string ?? value.ToString());
+            return;
+        }
+
+        attributes[key] = value;
     }
 
     internal static void MergeClass(Dictionary<string, object> attributes, string? value)
@@ -161,9 +173,14 @@ internal static class LeptonAttributeBuilder
             attributes[key] = value;
     }
 
-    private static Dictionary<string, object> Create(int additionalCapacity, int baseCapacity)
+    private static Dictionary<string, object> Create(int additionalCapacity, string? cssClass, string? style, string? id)
     {
-        return new Dictionary<string, object>(additionalCapacity + baseCapacity, StringComparer.OrdinalIgnoreCase);
+        // Empty bags need no backing arrays. Keep the existing headroom for populated
+        // bags: derived identifiable elements can append an ID after this builder returns.
+        int capacity = additionalCapacity == 0 && cssClass is null && style is null && id is null
+            ? 0
+            : additionalCapacity + (id is null ? 2 : 3);
+        return new Dictionary<string, object>(capacity, StringComparer.OrdinalIgnoreCase);
     }
 
 

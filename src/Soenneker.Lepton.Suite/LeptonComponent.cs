@@ -3,11 +3,12 @@ using Soenneker.Lepton.Suite.Abstract;
 
 namespace Soenneker.Lepton.Suite;
 
-/// <inheritdoc cref="ILeptonComponent" />
 public abstract class LeptonComponent : ComponentBase, ILeptonComponent
 {
+    private Action? _requestRender;
+
     protected Task RequestRender()
     {
-        return InvokeAsync(StateHasChanged);
+        return InvokeAsync(_requestRender ??= StateHasChanged);
     }
 }

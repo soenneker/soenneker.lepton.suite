@@ -11,6 +11,21 @@ namespace Soenneker.Lepton.Suite.Tests;
 public sealed class LeptonComponentTests : UnitTest
 {
     [Test]
+    public void Empty_attribute_bags_allocate_no_backing_arrays_and_remain_independently_mutable()
+    {
+        var component = new TestElement();
+        var first = component.Attributes();
+        var second = component.Attributes();
+
+        first.EnsureCapacity(0).Should().Be(0);
+        first["CLASS"] = "one";
+        first["class"].Should().Be("one");
+        second.Should().BeEmpty();
+        component.Attributes(("data-optional", null)).EnsureCapacity(0).Should().Be(0);
+        component.Attributes(("data-one", null), ("data-two", null)).EnsureCapacity(0).Should().Be(0);
+    }
+
+    [Test]
     public void LeptonComponent_does_not_define_common_element_parameters()
     {
         typeof(LeptonComponent).GetProperty("ChildContent").Should().BeNull();
@@ -68,6 +83,49 @@ public sealed class LeptonComponentTests : UnitTest
         component.DisposeAsync().AsTask().GetAwaiter().GetResult();
 
         component.CancellationRequested.Should().BeFalse();
+    }
+
+    [Test]
+    public async System.Threading.Tasks.Task LeptonCancellable_reuses_token_and_does_not_recreate_it_after_disposal()
+    {
+        var component = new TestCancellable();
+        CancellationToken token = component.Token;
+        token.CanBeCanceled.Should().BeTrue();
+        component.Token.Should().Be(token);
+
+        await component.DisposeAsync();
+
+        token.IsCancellationRequested.Should().BeTrue();
+        component.Token.Should().Be(CancellationToken.None);
+        await component.DisposeAsync();
+    }
+
+    [Test]
+    public async System.Threading.Tasks.Task LeptonCancellable_can_be_disposed_without_requesting_a_token()
+    {
+        var component = new TestCancellable();
+        await component.DisposeAsync();
+        component.Token.Should().Be(CancellationToken.None);
+        component.Disposed.Should().BeTrue();
+    }
+
+    [Test]
+    public void Attribute_merge_preserves_readonly_dictionary_and_case_insensitive_precedence()
+    {
+        var source = new Dictionary<string, object>
+        {
+            ["CLASS"] = "extra",
+            ["STYLE"] = "color:red",
+            ["role"] = "link",
+            ["data-null"] = null!
+        };
+        var component = new TestElement();
+        component.Configure("base", "display:block;  ", new System.Collections.ObjectModel.ReadOnlyDictionary<string, object>(source));
+        var attributes = component.Attributes(("role", "button"));
+        attributes["class"].Should().Be("base extra");
+        attributes["style"].Should().Be("display:block; color:red");
+        attributes["role"].Should().Be("link");
+        attributes.Should().NotContainKey("data-null");
     }
 
     [Test]
