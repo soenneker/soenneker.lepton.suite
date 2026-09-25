@@ -51,6 +51,6 @@
         <PackageReference Include="Microsoft.AspNetCore.Components" Version="10.0.12" />
         <PackageReference Include="Soenneker.Atomics.Resources" Version="4.0.46" />
         <PackageReference Include="Soenneker.Atomics.ValueBools" Version="4.0.45" />
-        <PackageReference Include="Soenneker.Extensions.String" Version="4.0.766" />
+        <PackageReference Include="Soenneker.Extensions.String" Version="4.0.767" />
     </ItemGroup>
 </Project>
