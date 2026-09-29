@@ -35,6 +35,16 @@ public abstract class LeptonElement : LeptonComponent, ILeptonElement
         return LeptonAttributeBuilder.Build(Class, Style, AdditionalAttributes, values);
     }
 
+    protected Dictionary<string, object> BuildAttributes((string Key, object? Value) value)
+    {
+        return BuildAttributes(value.Key, value.Value);
+    }
+
+    protected Dictionary<string, object> BuildAttributes((string Key, object? Value) first, (string Key, object? Value) second)
+    {
+        return BuildAttributes(first.Key, first.Value, second.Key, second.Value);
+    }
+
     protected virtual Dictionary<string, object> BuildAttributes(params (string Key, object? Value)[] values)
     {
         return LeptonAttributeBuilder.Build(Class, Style, AdditionalAttributes, values);

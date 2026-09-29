@@ -17,4 +17,8 @@ internal sealed class TestIdentifiableElement : LeptonIdentifiableElement
     {
         return BuildAttributes(key, value);
     }
+
+    public Dictionary<string, object> TupleAttributes() => BuildAttributes(("data-state", "open"));
+
+    public Dictionary<string, object> TuplePairAttributes() => BuildAttributes(("data-state", "open"), ("data-optional", null));
 }

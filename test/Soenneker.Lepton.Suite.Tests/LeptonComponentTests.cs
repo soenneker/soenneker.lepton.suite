@@ -11,6 +11,41 @@ namespace Soenneker.Lepton.Suite.Tests;
 public sealed class LeptonComponentTests : UnitTest
 {
     [Test]
+    public void Single_tuple_attributes_allocate_no_more_than_key_value_attributes()
+    {
+        var component = new TestIdentifiableElement();
+        for (var i = 0; i < 100; i++)
+        {
+            _ = component.Attributes("data-state", "open");
+            _ = component.TupleAttributes();
+        }
+
+        long start = GC.GetAllocatedBytesForCurrentThread();
+        for (var i = 0; i < 1000; i++)
+            _ = component.Attributes("data-state", "open");
+        long directBytes = GC.GetAllocatedBytesForCurrentThread() - start;
+
+        start = GC.GetAllocatedBytesForCurrentThread();
+        for (var i = 0; i < 1000; i++)
+            _ = component.TupleAttributes();
+        long tupleBytes = GC.GetAllocatedBytesForCurrentThread() - start;
+        tupleBytes.Should().Be(directBytes);
+    }
+
+    [Test]
+    public void Tuple_overloads_preserve_identifiable_overrides_without_parameter_arrays()
+    {
+        var component = new TestIdentifiableElement();
+        component.Configure("primary", null, null, new Dictionary<string, object> { ["data-state"] = "closed", ["id"] = "other" });
+        var single = component.TupleAttributes();
+        var pair = component.TuplePairAttributes();
+        single["id"].Should().Be("primary");
+        single["data-state"].Should().Be("closed");
+        pair.Should().BeEquivalentTo(single);
+        pair.Should().NotContainKey("data-optional");
+    }
+
+    [Test]
     public void Empty_attribute_bags_allocate_no_backing_arrays_and_remain_independently_mutable()
     {
         var component = new TestElement();
