@@ -121,7 +121,7 @@ public sealed class LeptonComponentTests : UnitTest
     }
 
     [Test]
-    public async System.Threading.Tasks.Task LeptonCancellable_reuses_token_and_does_not_recreate_it_after_disposal()
+    public async System.Threading.Tasks.ValueTask LeptonCancellable_reuses_token_and_does_not_recreate_it_after_disposal()
     {
         var component = new TestCancellable();
         CancellationToken token = component.Token;
@@ -136,7 +136,7 @@ public sealed class LeptonComponentTests : UnitTest
     }
 
     [Test]
-    public async System.Threading.Tasks.Task LeptonCancellable_can_be_disposed_without_requesting_a_token()
+    public async System.Threading.Tasks.ValueTask LeptonCancellable_can_be_disposed_without_requesting_a_token()
     {
         var component = new TestCancellable();
         await component.DisposeAsync();
