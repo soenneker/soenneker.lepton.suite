@@ -51,4 +51,9 @@ public abstract class LeptonDisposableContentElement : LeptonDisposableContent, 
     {
         return LeptonAttributeBuilder.Build(Class, Style, AdditionalAttributes, values);
     }
+
+    protected virtual Dictionary<string, object> BuildAttributes(params ReadOnlySpan<(string Key, object? Value)> values)
+    {
+        return LeptonAttributeBuilder.Build(Class, Style, AdditionalAttributes, values);
+    }
 }

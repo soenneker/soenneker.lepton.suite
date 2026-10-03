@@ -62,6 +62,11 @@ internal static class LeptonAttributeBuilder
 
     internal static Dictionary<string, object> Build(string? cssClass, string? style, IReadOnlyDictionary<string, object>? additionalAttributes, (string Key, object? Value)[] values, string? id = null)
     {
+        return Build(cssClass, style, additionalAttributes, values.AsSpan(), id);
+    }
+
+    internal static Dictionary<string, object> Build(string? cssClass, string? style, IReadOnlyDictionary<string, object>? additionalAttributes, ReadOnlySpan<(string Key, object? Value)> values, string? id = null)
+    {
         switch (values.Length)
         {
             case 0:
@@ -177,9 +182,7 @@ internal static class LeptonAttributeBuilder
     {
         // Empty bags need no backing arrays. Keep the existing headroom for populated
         // bags: derived identifiable elements can append an ID after this builder returns.
-        int capacity = additionalCapacity == 0 && cssClass is null && style is null && id is null
-            ? 0
-            : additionalCapacity + (id is null ? 2 : 3);
+        int capacity = additionalCapacity + (cssClass.IsNullOrWhiteSpace() ? 0 : 1) + (style.IsNullOrWhiteSpace() ? 0 : 1) + (id is null ? 0 : 1);
         return new Dictionary<string, object>(capacity, StringComparer.OrdinalIgnoreCase);
     }
 

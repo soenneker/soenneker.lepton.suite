@@ -2,11 +2,11 @@ using Soenneker.Atomics.Resources;
 
 namespace Soenneker.Lepton.Suite;
 
-internal sealed class LeptonCancellationResource : IAsyncDisposable
+internal readonly struct LeptonCancellationResource : IAsyncDisposable
 {
     private readonly AtomicResource<CancellationTokenSource> _source;
 
-    internal LeptonCancellationResource()
+    public LeptonCancellationResource()
     {
         _source = new AtomicResource<CancellationTokenSource>(
             factory: static () => new CancellationTokenSource(),

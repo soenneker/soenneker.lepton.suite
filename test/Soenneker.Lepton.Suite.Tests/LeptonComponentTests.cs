@@ -11,6 +11,32 @@ namespace Soenneker.Lepton.Suite.Tests;
 public sealed class LeptonComponentTests : UnitTest
 {
     [Test]
+    public void Multiple_tuple_attributes_avoid_parameter_arrays_and_preserve_id_precedence()
+    {
+        var component = new TestIdentifiableElement();
+        component.Configure("primary", "base", null, new Dictionary<string, object> { ["id"] = "other", ["role"] = "link" });
+        for (var i = 0; i < 100; i++)
+        {
+            _ = component.TupleManyAttributes();
+            _ = component.ArrayAttributes();
+        }
+
+        long start = GC.GetAllocatedBytesForCurrentThread();
+        for (var i = 0; i < 1000; i++) _ = component.TupleManyAttributes();
+        long spanBytes = GC.GetAllocatedBytesForCurrentThread() - start;
+        start = GC.GetAllocatedBytesForCurrentThread();
+        for (var i = 0; i < 1000; i++) _ = component.ArrayAttributes();
+        long arrayBytes = GC.GetAllocatedBytesForCurrentThread() - start;
+
+        spanBytes.Should().BeLessThan(arrayBytes);
+        var result = component.TupleManyAttributes();
+        result.Should().BeEquivalentTo(component.ArrayAttributes());
+        result["id"].Should().Be("primary");
+        result["role"].Should().Be("link");
+        result.Should().NotContainKey("data-optional");
+    }
+
+    [Test]
     public void Single_tuple_attributes_allocate_no_more_than_key_value_attributes()
     {
         var component = new TestIdentifiableElement();

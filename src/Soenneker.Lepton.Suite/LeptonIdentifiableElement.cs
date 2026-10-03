@@ -55,4 +55,11 @@ public abstract class LeptonIdentifiableElement : LeptonElement, ILeptonIdentifi
 
         return attributes;
     }
+
+    protected override Dictionary<string, object> BuildAttributes(params ReadOnlySpan<(string Key, object? Value)> values)
+    {
+        Dictionary<string, object> attributes = base.BuildAttributes(values);
+        SetAttribute(attributes, "id", Id);
+        return attributes;
+    }
 }

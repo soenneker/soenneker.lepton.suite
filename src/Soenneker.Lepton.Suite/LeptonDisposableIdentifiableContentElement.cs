@@ -35,4 +35,9 @@ public abstract class LeptonDisposableIdentifiableContentElement : LeptonDisposa
     {
         return LeptonAttributeBuilder.Build(Class, Style, AdditionalAttributes, values, Id);
     }
+
+    protected override Dictionary<string, object> BuildAttributes(params ReadOnlySpan<(string Key, object? Value)> values)
+    {
+        return LeptonAttributeBuilder.Build(Class, Style, AdditionalAttributes, values, Id);
+    }
 }
