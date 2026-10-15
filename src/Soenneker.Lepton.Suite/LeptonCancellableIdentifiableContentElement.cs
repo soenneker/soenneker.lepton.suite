@@ -1,31 +1,18 @@
-using Microsoft.AspNetCore.Components;
-using Soenneker.Extensions.ValueTask;
 using Soenneker.Lepton.Suite.Abstract;
 
 namespace Soenneker.Lepton.Suite;
 
-/// <inheritdoc cref="ILeptonCancellableIdentifiableContentElement" />
 public abstract class LeptonCancellableIdentifiableContentElement : LeptonDisposableIdentifiableContentElement, ILeptonCancellableIdentifiableContentElement
 {
-    private readonly LeptonCancellationResource _cancellation = new();
+    private LeptonCancellationResource _cancellation;
 
     protected CancellationToken CancellationToken => _cancellation.Token;
 
     protected bool IsCancellationRequested => _cancellation.IsCancellationRequested;
 
-    /// <summary>
-    /// Asynchronously releases resources used by the current instance.
-    /// </summary>
-    /// <returns>A task that represents the asynchronous operation.</returns>
-    public override async ValueTask DisposeAsync()
+    public override ValueTask DisposeAsync()
     {
-        try
-        {
-            await _cancellation.DisposeAsync().NoSync();
-        }
-        finally
-        {
-            await base.DisposeAsync().NoSync();
-        }
+        _cancellation.Dispose();
+        return base.DisposeAsync();
     }
 }

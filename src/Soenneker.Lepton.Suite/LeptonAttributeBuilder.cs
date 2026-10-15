@@ -5,86 +5,60 @@ namespace Soenneker.Lepton.Suite;
 
 internal static class LeptonAttributeBuilder
 {
-    internal static Dictionary<string, object> Build(string? cssClass, string? style, IReadOnlyDictionary<string, object>? additionalAttributes, string? id = null)
+    internal static Dictionary<string, object> Build(string? cssClass, string? style, IReadOnlyDictionary<string, object>? additionalAttributes, string? id = null, bool idOverridesAdditionalAttributes = false)
     {
         Dictionary<string, object> attributes = Create(additionalAttributes?.Count ?? 0, cssClass, style, id);
-
-        MergeClass(attributes, cssClass);
-        MergeStyle(attributes, style);
-        Set(attributes, "id", id);
-        MergeAdditional(attributes, additionalAttributes);
-
-        return attributes;
+        return Complete(attributes, additionalAttributes, id, idOverridesAdditionalAttributes);
     }
 
-    internal static Dictionary<string, object> Build(string? cssClass, string? style, IReadOnlyDictionary<string, object>? additionalAttributes, string key, object? value, string? id = null)
+    internal static Dictionary<string, object> Build(string? cssClass, string? style, IReadOnlyDictionary<string, object>? additionalAttributes, string key, object? value, string? id = null, bool idOverridesAdditionalAttributes = false)
     {
         Dictionary<string, object> attributes = Create((additionalAttributes?.Count ?? 0) + (value is null ? 0 : 1), cssClass, style, id);
 
-        MergeClass(attributes, cssClass);
-        MergeStyle(attributes, style);
         Set(attributes, key, value);
-        Set(attributes, "id", id);
-        MergeAdditional(attributes, additionalAttributes);
-
-        return attributes;
+        return Complete(attributes, additionalAttributes, id, idOverridesAdditionalAttributes);
     }
 
-    internal static Dictionary<string, object> Build(string? cssClass, string? style, IReadOnlyDictionary<string, object>? additionalAttributes, string key1, object? value1, string key2, object? value2, string? id = null)
+    internal static Dictionary<string, object> Build(string? cssClass, string? style, IReadOnlyDictionary<string, object>? additionalAttributes, string key1, object? value1, string key2, object? value2, string? id = null, bool idOverridesAdditionalAttributes = false)
     {
         Dictionary<string, object> attributes = Create((additionalAttributes?.Count ?? 0) + (value1 is null ? 0 : 1) + (value2 is null ? 0 : 1), cssClass, style, id);
 
-        MergeClass(attributes, cssClass);
-        MergeStyle(attributes, style);
         Set(attributes, key1, value1);
         Set(attributes, key2, value2);
-        Set(attributes, "id", id);
-        MergeAdditional(attributes, additionalAttributes);
-
-        return attributes;
+        return Complete(attributes, additionalAttributes, id, idOverridesAdditionalAttributes);
     }
 
-    internal static Dictionary<string, object> Build(string? cssClass, string? style, IReadOnlyDictionary<string, object>? additionalAttributes, ReadOnlySpan<KeyValuePair<string, object?>> values, string? id = null)
+    internal static Dictionary<string, object> Build(string? cssClass, string? style, IReadOnlyDictionary<string, object>? additionalAttributes, ReadOnlySpan<KeyValuePair<string, object?>> values, string? id = null, bool idOverridesAdditionalAttributes = false)
     {
-        Dictionary<string, object> attributes = Create((additionalAttributes?.Count ?? 0) + values.Length, cssClass, style, id);
-
-        MergeClass(attributes, cssClass);
-        MergeStyle(attributes, style);
+        Dictionary<string, object> attributes = Create((additionalAttributes?.Count ?? 0) + CountValues(values), cssClass, style, id);
 
         foreach (KeyValuePair<string, object?> pair in values)
             Set(attributes, pair.Key, pair.Value);
-
-        Set(attributes, "id", id);
-        MergeAdditional(attributes, additionalAttributes);
-
-        return attributes;
+        return Complete(attributes, additionalAttributes, id, idOverridesAdditionalAttributes);
     }
 
-    internal static Dictionary<string, object> Build(string? cssClass, string? style, IReadOnlyDictionary<string, object>? additionalAttributes, (string Key, object? Value)[] values, string? id = null)
+    internal static Dictionary<string, object> Build(string? cssClass, string? style, IReadOnlyDictionary<string, object>? additionalAttributes, (string Key, object? Value)[] values, string? id = null, bool idOverridesAdditionalAttributes = false)
     {
-        return Build(cssClass, style, additionalAttributes, values.AsSpan(), id);
+        return Build(cssClass, style, additionalAttributes, values.AsSpan(), id, idOverridesAdditionalAttributes);
     }
 
-    internal static Dictionary<string, object> Build(string? cssClass, string? style, IReadOnlyDictionary<string, object>? additionalAttributes, ReadOnlySpan<(string Key, object? Value)> values, string? id = null)
+    internal static Dictionary<string, object> Build(string? cssClass, string? style, IReadOnlyDictionary<string, object>? additionalAttributes, ReadOnlySpan<(string Key, object? Value)> values, string? id = null, bool idOverridesAdditionalAttributes = false)
     {
         switch (values.Length)
         {
             case 0:
-                return Build(cssClass, style, additionalAttributes, id: id);
+                return Build(cssClass, style, additionalAttributes, id: id, idOverridesAdditionalAttributes: idOverridesAdditionalAttributes);
             case 1:
-                return Build(cssClass, style, additionalAttributes, values[0].Key, values[0].Value, id);
+                return Build(cssClass, style, additionalAttributes, values[0].Key, values[0].Value, id, idOverridesAdditionalAttributes);
             case 2:
-                return Build(cssClass, style, additionalAttributes, values[0].Key, values[0].Value, values[1].Key, values[1].Value, id);
+                return Build(cssClass, style, additionalAttributes, values[0].Key, values[0].Value, values[1].Key, values[1].Value, id, idOverridesAdditionalAttributes);
         }
 
-        Dictionary<string, object> attributes = Create((additionalAttributes?.Count ?? 0) + values.Length, cssClass, style, id);
-        MergeClass(attributes, cssClass);
-        MergeStyle(attributes, style);
+        Dictionary<string, object> attributes = Create((additionalAttributes?.Count ?? 0) + CountValues(values), cssClass, style, id);
+
         foreach ((string key, object? value) in values)
             Set(attributes, key, value);
-        Set(attributes, "id", id);
-        MergeAdditional(attributes, additionalAttributes);
-        return attributes;
+        return Complete(attributes, additionalAttributes, id, idOverridesAdditionalAttributes);
     }
 
     internal static void MergeAdditional(Dictionary<string, object> attributes, IReadOnlyDictionary<string, object>? additionalAttributes)
@@ -178,13 +152,56 @@ internal static class LeptonAttributeBuilder
             attributes[key] = value;
     }
 
-    private static Dictionary<string, object> Create(int additionalCapacity, string? cssClass, string? style, string? id)
+    private static Dictionary<string, object> Complete(Dictionary<string, object> attributes, IReadOnlyDictionary<string, object>? additionalAttributes,
+        string? id, bool idOverridesAdditionalAttributes)
     {
-        // Empty bags need no backing arrays. Keep the existing headroom for populated
-        // bags: derived identifiable elements can append an ID after this builder returns.
-        int capacity = additionalCapacity + (cssClass.IsNullOrWhiteSpace() ? 0 : 1) + (style.IsNullOrWhiteSpace() ? 0 : 1) + (id is null ? 0 : 1);
-        return new Dictionary<string, object>(capacity, StringComparer.OrdinalIgnoreCase);
+        if (!idOverridesAdditionalAttributes)
+            Set(attributes, "id", id);
+
+        MergeAdditional(attributes, additionalAttributes);
+
+        if (idOverridesAdditionalAttributes)
+            Set(attributes, "id", id);
+
+        return attributes;
     }
 
+    private static int CountValues(ReadOnlySpan<KeyValuePair<string, object?>> values)
+    {
+        var count = 0;
+        foreach (KeyValuePair<string, object?> pair in values)
+        {
+            if (pair.Value is not null)
+                count++;
+        }
 
+        return count;
+    }
+
+    private static int CountValues(ReadOnlySpan<(string Key, object? Value)> values)
+    {
+        var count = 0;
+        foreach ((string _, object? value) in values)
+        {
+            if (value is not null)
+                count++;
+        }
+
+        return count;
+    }
+
+    private static Dictionary<string, object> Create(int additionalCapacity, string? cssClass, string? style, string? id)
+    {
+        bool hasClass = !cssClass.IsNullOrWhiteSpace();
+        bool hasStyle = !style.IsNullOrWhiteSpace();
+        int capacity = additionalCapacity + (hasClass ? 1 : 0) + (hasStyle ? 1 : 0) + (id is null ? 0 : 1);
+        var attributes = new Dictionary<string, object>(capacity, StringComparer.OrdinalIgnoreCase);
+
+        if (hasClass)
+            attributes["class"] = cssClass!;
+        if (hasStyle)
+            attributes["style"] = style!;
+
+        return attributes;
+    }
 }

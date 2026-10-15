@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System;
 using Soenneker.Lepton.Suite;
 
 namespace Soenneker.Lepton.Suite.Tests;
@@ -16,4 +17,8 @@ internal sealed class TestElement : LeptonElement
     {
         return BuildAttributes(values);
     }
+
+    public Dictionary<string, object> NullSpanAttributes() => BuildAttributes(("a", null), ("b", null), ("c", null), ("d", null));
+
+    public Dictionary<string, object> KeyValueAttributes(ReadOnlySpan<KeyValuePair<string, object?>> values) => BuildAttributes(values);
 }

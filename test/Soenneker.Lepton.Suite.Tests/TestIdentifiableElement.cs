@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System;
 using Soenneker.Lepton.Suite;
 
 namespace Soenneker.Lepton.Suite.Tests;
@@ -17,6 +18,10 @@ internal sealed class TestIdentifiableElement : LeptonIdentifiableElement
     {
         return BuildAttributes(key, value);
     }
+
+    public Dictionary<string, object> EmptyAttributes() => BuildAttributes();
+
+    public Dictionary<string, object> KeyValueAttributes(ReadOnlySpan<KeyValuePair<string, object?>> values) => BuildAttributes(values);
 
     public Dictionary<string, object> TupleAttributes() => BuildAttributes(("data-state", "open"));
 
