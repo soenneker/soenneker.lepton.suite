@@ -1,58 +1,46 @@
+using System.Runtime.CompilerServices;
+using Soenneker.Atomics.ValueResources;
+
 namespace Soenneker.Lepton.Suite;
 
 internal struct LeptonCancellationResource
 {
-    private static readonly object _disposed = new();
+    private static readonly Func<LeptonCancellationSource> _factory = CreateSource;
+    private static readonly Func<LeptonCancellationSource, ValueTask> _teardown = DisposeSource;
 
-    // null, a source, or the terminal sentinel. Keep the lazy state inline so
-    // components that never request cancellation need no resource allocation.
-    private object? _source;
+    private ValueAtomicResource<LeptonCancellationSource> _source;
 
     internal CancellationToken Token
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
-            object? source = Volatile.Read(ref _source);
-            return source is null ? CreateToken() : GetToken(source);
+            LeptonCancellationSource? source = _source.TryGet();
+            return source is not null ? source.CachedToken : CreateToken();
         }
     }
 
-    internal bool IsCancellationRequested => Volatile.Read(ref _source) is LeptonCancellationSource { IsCancellationRequested: true };
+    internal bool IsCancellationRequested => _source.TryGet()?.IsCancellationRequested == true;
 
-    private CancellationToken CreateToken()
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private CancellationToken CreateToken() => _source.GetOrCreate(_factory, _teardown)?.CachedToken ?? CancellationToken.None;
+
+    private static LeptonCancellationSource CreateSource() => new();
+
+    // This helper's teardown always completes synchronously.
+    internal void Dispose() => _source.DisposeAsync(_teardown).GetAwaiter().GetResult();
+
+    private static ValueTask DisposeSource(LeptonCancellationSource source)
     {
-        var created = new LeptonCancellationSource();
-        object? observed = Interlocked.CompareExchange(ref _source, created, null);
-        if (observed is null)
-            return created.CachedToken;
-
-        // A losing candidate has never escaped and cannot have registrations.
-        created.Dispose();
-        return GetToken(observed);
-    }
-
-    private static CancellationToken GetToken(object source)
-    {
-        return source is LeptonCancellationSource cancellation ? cancellation.CachedToken : CancellationToken.None;
-    }
-
-    internal void Dispose()
-    {
-        if (Interlocked.Exchange(ref _source, _disposed) is not LeptonCancellationSource source)
-            return;
-
         try
         {
-            if (!source.IsCancellationRequested)
-                source.Cancel();
-        }
-        catch
-        {
-            // Preserve the resource's best-effort cleanup when callbacks throw.
+            source.Cancel();
         }
         finally
         {
             source.Dispose();
         }
+
+        return default;
     }
 }
