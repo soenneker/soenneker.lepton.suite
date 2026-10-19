@@ -3,7 +3,7 @@ using Soenneker.Lepton.Suite.Abstract;
 
 namespace Soenneker.Lepton.Suite;
 
-public abstract class LeptonIdentifiableElement : LeptonElement, ILeptonIdentifiableElement
+public abstract partial class LeptonIdentifiableElement : LeptonElement, ILeptonIdentifiableElement
 {
     [Parameter]
     public string? Id { get; set; }

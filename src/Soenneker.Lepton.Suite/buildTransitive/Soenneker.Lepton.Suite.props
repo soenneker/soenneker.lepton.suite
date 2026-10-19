@@ -1,0 +1,9 @@
+<Project>
+  <PropertyGroup>
+    <!-- Generate Razor C# before the compiler runs parameter generation. -->
+    <UseRazorSourceGenerator>false</UseRazorSourceGenerator>
+  </PropertyGroup>
+  <ItemGroup>
+    <Analyzer Include="$(MSBuildThisFileDirectory)..\analyzers\dotnet\cs\Soenneker.Lepton.Gen.Parameters.dll" />
+  </ItemGroup>
+</Project>

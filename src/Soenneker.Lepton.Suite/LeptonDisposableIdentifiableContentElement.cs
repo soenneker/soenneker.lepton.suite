@@ -4,7 +4,7 @@ using Soenneker.Lepton.Suite.Abstract;
 namespace Soenneker.Lepton.Suite;
 
 /// <inheritdoc cref="ILeptonDisposableIdentifiableContentElement" />
-public abstract class LeptonDisposableIdentifiableContentElement : LeptonDisposableContentElement, ILeptonDisposableIdentifiableContentElement
+public abstract partial class LeptonDisposableIdentifiableContentElement : LeptonDisposableContentElement, ILeptonDisposableIdentifiableContentElement
 {
     [Parameter]
     public string? Id { get; set; }

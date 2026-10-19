@@ -2,7 +2,7 @@ using Soenneker.Lepton.Suite.Abstract;
 
 namespace Soenneker.Lepton.Suite;
 
-public abstract class LeptonCancellableContent : LeptonDisposableContent, ILeptonCancellableContent
+public abstract partial class LeptonCancellableContent : LeptonDisposableContent, ILeptonCancellableContent
 {
     private LeptonCancellationResource _cancellation;
 
