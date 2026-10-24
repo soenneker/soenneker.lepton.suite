@@ -3,9 +3,13 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Components;
 using Soenneker.Lepton.Suite.PackageSmoke;
 using Soenneker.Lepton.Suite.PackageSmoke.Dependency;
+using Soenneker.Lepton.Suite.PackageSmoke.TransitiveDependency;
 
 if (SmokeDependency.Message != "project reference")
     throw new InvalidOperationException("Project reference resolution failed.");
+
+if (TransitiveSmokeDependency.Message != "transitive project reference")
+    throw new InvalidOperationException("Transitive project reference resolution failed.");
 
 if (RawStringPage.Sample != "await client.Enqueue(\"message\", new Message(\"Hello\"));")
     throw new InvalidOperationException("Razor raw string content changed.");

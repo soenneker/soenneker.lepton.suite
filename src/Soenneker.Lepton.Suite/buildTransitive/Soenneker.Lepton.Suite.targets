@@ -5,6 +5,16 @@
       <GlobalPropertiesToRemove>%(ProjectReference.GlobalPropertiesToRemove);IntermediateOutputPath;EmitCompilerGeneratedFiles;CompilerGeneratedFilesOutputPath</GlobalPropertiesToRemove>
     </ProjectReference>
   </ItemGroup>
+  <Target Name="PreserveLeptonTransitiveReferencePaths"
+          AfterTargets="IncludeTransitiveProjectReferences"
+          Condition="'$(_LeptonRazorBindingPass)' == 'true'">
+    <!-- The SDK adds transitive references during execution, after the initial item update. -->
+    <ItemGroup>
+      <ProjectReference Update="@(ProjectReference)">
+        <GlobalPropertiesToRemove>%(ProjectReference.GlobalPropertiesToRemove);IntermediateOutputPath;EmitCompilerGeneratedFiles;CompilerGeneratedFilesOutputPath</GlobalPropertiesToRemove>
+      </ProjectReference>
+    </ItemGroup>
+  </Target>
   <!-- Razor and other source generators normally run independently. Materialize modern Razor output
        in an isolated compile so parameter generation can inspect every declaration, including Razor
        components that cannot participate in the SDK's pre-compilation declaration phase. -->
