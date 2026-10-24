@@ -67,6 +67,9 @@ jobs:
             --no-restore \
             --output ./artifacts
 
+      - name: Verify packaged Razor consumer
+        run: dotnet run --project test/Soenneker.Lepton.Suite.PackageSmoke -c Release
+
       - name: Publish to NuGet
         uses: soenneker/nuget-resilient-publish@v4
         with:
