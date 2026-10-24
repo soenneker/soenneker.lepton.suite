@@ -58,5 +58,6 @@
         <ProjectReference Include="..\Soenneker.Lepton.Gen.Parameters\Soenneker.Lepton.Gen.Parameters.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
         <None Include="..\Soenneker.Lepton.Gen.Parameters\bin\$(Configuration)\netstandard2.0\Soenneker.Lepton.Gen.Parameters.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
         <None Include="buildTransitive\Soenneker.Lepton.Suite.props" Pack="true" PackagePath="buildTransitive" />
+        <None Include="buildTransitive\Soenneker.Lepton.Suite.targets" Pack="true" PackagePath="buildTransitive" />
     </ItemGroup>
 </Project>

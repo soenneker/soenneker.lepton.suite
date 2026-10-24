@@ -1,0 +1,15 @@
+@namespace Soenneker.Lepton.Suite.PackageSmoke
+@inherits Soenneker.Lepton.Suite.LeptonComponent
+
+@Fragment
+
+@code {
+    protected override bool UseSharedParameterMetadata => true;
+
+    [Microsoft.AspNetCore.Components.Parameter]
+    public string? Text { get; set; }
+
+    private Microsoft.AspNetCore.Components.RenderFragment Fragment => @<span>@Text</span>;
+
+    public void Bind(Microsoft.AspNetCore.Components.ParameterView parameters) => ApplyGeneratedParameters(parameters);
+}

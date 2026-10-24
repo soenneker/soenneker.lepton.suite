@@ -1,0 +1,38 @@
+<Project>
+  <!-- Razor and other source generators normally run independently. Materialize modern Razor output
+       in an isolated compile so parameter generation can inspect every declaration, including Razor
+       components that cannot participate in the SDK's pre-compilation declaration phase. -->
+  <Target Name="PrepareLeptonRazorBindingInputs"
+          Condition="'$(UseRazorSourceGenerator)' == 'true' and '$(_LeptonRazorBindingPass)' != 'true' and '$(DesignTimeBuild)' != 'true' and '@(RazorComponent)' != ''">
+    <PropertyGroup>
+      <_LeptonRazorPassRoot>$([System.IO.Path]::Combine('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'lepton-razor'))</_LeptonRazorPassRoot>
+      <_LeptonRazorPassIntermediate>$(_LeptonRazorPassRoot)/obj/</_LeptonRazorPassIntermediate>
+      <_LeptonRazorGeneratedDirectory>$(_LeptonRazorPassRoot)/generated</_LeptonRazorGeneratedDirectory>
+    </PropertyGroup>
+    <MakeDir Directories="$(_LeptonRazorPassRoot)" />
+    <!-- A removed source is not detectable from timestamps alone. Track the input set as well. -->
+    <WriteLinesToFile File="$(_LeptonRazorPassRoot)/input-files.txt"
+                      Lines="@(Compile->'%(FullPath)');@(RazorComponent->'%(FullPath)');@(AdditionalFiles->'%(FullPath)');@(ReferencePath->'%(FullPath)');@(Analyzer->'%(FullPath)')"
+                      Overwrite="true" WriteOnlyWhenDifferent="true" />
+  </Target>
+  <Target Name="GenerateLeptonRazorBindingInputs"
+          DependsOnTargets="PrepareLeptonRazorBindingInputs"
+          Inputs="@(Compile);@(RazorComponent);@(AdditionalFiles);@(ReferencePath);@(Analyzer);$(MSBuildAllProjects);$(MSBuildProjectFullPath);$(_LeptonRazorPassRoot)/input-files.txt"
+          Outputs="$(_LeptonRazorPassRoot)/inputs.stamp"
+          Condition="'$(UseRazorSourceGenerator)' == 'true' and '$(_LeptonRazorBindingPass)' != 'true' and '$(DesignTimeBuild)' != 'true' and '@(RazorComponent)' != ''">
+    <RemoveDir Directories="$(_LeptonRazorGeneratedDirectory)" />
+    <MakeDir Directories="$(_LeptonRazorGeneratedDirectory)" />
+    <Delete Files="$(_LeptonRazorPassIntermediate)$(TargetName)$(TargetExt)" />
+    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="Compile" BuildInParallel="false"
+             Properties="_LeptonRazorBindingPass=true;BuildProjectReferences=false;IntermediateOutputPath=$(_LeptonRazorPassIntermediate);EmitCompilerGeneratedFiles=true;CompilerGeneratedFilesOutputPath=$(_LeptonRazorGeneratedDirectory)" />
+    <Touch Files="$(_LeptonRazorPassRoot)/inputs.stamp" AlwaysCreate="true" />
+  </Target>
+  <Target Name="AddLeptonRazorBindingInputs" BeforeTargets="CoreCompile"
+          DependsOnTargets="GenerateLeptonRazorBindingInputs"
+          Condition="'$(UseRazorSourceGenerator)' == 'true' and '$(_LeptonRazorBindingPass)' != 'true' and '$(DesignTimeBuild)' != 'true' and '@(RazorComponent)' != ''">
+    <ItemGroup>
+      <AdditionalFiles Include="$(_LeptonRazorGeneratedDirectory)/**/Microsoft.NET.Sdk.Razor.SourceGenerators.RazorSourceGenerator/**/*.cs" />
+      <FileWrites Include="$(_LeptonRazorPassRoot)/**/*" />
+    </ItemGroup>
+  </Target>
+</Project>

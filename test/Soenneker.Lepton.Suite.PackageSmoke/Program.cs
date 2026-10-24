@@ -32,4 +32,9 @@ mixed.Bind(ParameterView.FromDictionary(new Dictionary<string, object?>
 if (mixed.CodeBehindText != "code-behind" || mixed.InlineText != "inline")
     throw new InvalidOperationException("Mixed Razor and code-behind parameter binding failed.");
 
-Console.WriteLine("Razor raw strings and generated bindings passed: code-behind, inline, mixed, generic, inherited, capture, null, omitted, case-insensitive.");
+var template = new TemplateParameterPage();
+template.Bind(ParameterView.FromDictionary(new Dictionary<string, object?> { ["Text"] = "template" }));
+if (template.Text != "template")
+    throw new InvalidOperationException("Razor template parameter binding failed.");
+
+Console.WriteLine("Razor raw strings and generated bindings passed: code-behind, inline, mixed, template, generic, inherited, capture, null, omitted, case-insensitive.");
