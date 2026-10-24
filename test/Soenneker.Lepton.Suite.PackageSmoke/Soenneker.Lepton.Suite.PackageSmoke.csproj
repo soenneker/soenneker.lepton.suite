@@ -11,5 +11,6 @@
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Soenneker.Lepton.Suite" Version="$(LeptonPackageVersion)" />
+    <ProjectReference Include="../Soenneker.Lepton.Suite.PackageSmoke.Dependency/Soenneker.Lepton.Suite.PackageSmoke.Dependency.csproj" />
   </ItemGroup>
 </Project>

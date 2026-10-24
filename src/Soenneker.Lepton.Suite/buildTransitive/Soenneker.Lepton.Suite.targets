@@ -1,4 +1,10 @@
 <Project>
+  <ItemGroup Condition="'$(_LeptonRazorBindingPass)' == 'true'">
+    <!-- Isolate this project's compile without changing reference-assembly locations in dependencies. -->
+    <ProjectReference Update="@(ProjectReference)">
+      <GlobalPropertiesToRemove>%(ProjectReference.GlobalPropertiesToRemove);IntermediateOutputPath;EmitCompilerGeneratedFiles;CompilerGeneratedFilesOutputPath</GlobalPropertiesToRemove>
+    </ProjectReference>
+  </ItemGroup>
   <!-- Razor and other source generators normally run independently. Materialize modern Razor output
        in an isolated compile so parameter generation can inspect every declaration, including Razor
        components that cannot participate in the SDK's pre-compilation declaration phase. -->

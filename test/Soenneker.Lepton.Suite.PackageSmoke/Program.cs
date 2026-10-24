@@ -2,6 +2,10 @@ using System;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Components;
 using Soenneker.Lepton.Suite.PackageSmoke;
+using Soenneker.Lepton.Suite.PackageSmoke.Dependency;
+
+if (SmokeDependency.Message != "project reference")
+    throw new InvalidOperationException("Project reference resolution failed.");
 
 if (RawStringPage.Sample != "await client.Enqueue(\"message\", new Message(\"Hello\"));")
     throw new InvalidOperationException("Razor raw string content changed.");
