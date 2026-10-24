@@ -45,4 +45,4 @@ template.Bind(ParameterView.FromDictionary(new Dictionary<string, object?> { ["T
 if (template.Text != "template")
     throw new InvalidOperationException("Razor template parameter binding failed.");
 
-Console.WriteLine("Razor raw strings and generated bindings passed: code-behind, inline, mixed, template, generic, inherited, capture, null, omitted, case-insensitive.");
+Console.WriteLine("Modern Razor, framework binding, and explicit C# generated binding passed: code-behind, inline, mixed, template, generic, inherited, capture, null, omitted, case-insensitive.");

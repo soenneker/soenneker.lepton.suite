@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -24,38 +23,13 @@ public sealed class ParameterGenerator : IIncrementalGenerator
         var candidates = context.SyntaxProvider.CreateSyntaxProvider(
             static (node, _) => node is ClassDeclarationSyntax,
             static (ctx, _) => ctx.SemanticModel.GetDeclaredSymbol((ClassDeclarationSyntax)ctx.Node) as INamedTypeSymbol);
-        var razorInputs = context.AdditionalTextsProvider
-            .Where(static file => file.Path.IndexOf("Microsoft.NET.Sdk.Razor.SourceGenerators.RazorSourceGenerator", StringComparison.Ordinal) >= 0 &&
-                file.Path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
-            .Select(static (file, cancellationToken) => (file.Path, Text: file.GetText(cancellationToken)))
-            .Collect();
-        context.RegisterSourceOutput(candidates.Collect().Combine(context.CompilationProvider).Combine(razorInputs), static (ctx, input) =>
+        context.RegisterSourceOutput(candidates.Collect().Combine(context.CompilationProvider), static (ctx, input) =>
         {
-            Compilation compilation = input.Left.Right;
-            IEnumerable<INamedTypeSymbol?> types = input.Left.Left;
-            if (!input.Right.IsDefaultOrEmpty)
-            {
-                var generatedFileNames = new HashSet<string>(input.Right.Select(file => Path.GetFileName(file.Path)), StringComparer.Ordinal);
-                // SDK 11 can expose a subset of these declarations already. Use the complete isolated
-                // Razor output once, rather than adding duplicate partial members to the semantic model.
-                compilation = compilation.RemoveSyntaxTrees(compilation.SyntaxTrees.Where(tree =>
-                    generatedFileNames.Contains(Path.GetFileName(tree.FilePath)) &&
-                    tree.FilePath.IndexOf("Microsoft.NET.Sdk.Razor.SourceGenerators.RazorSourceGenerator", StringComparison.Ordinal) >= 0));
-                var parseOptions = compilation.SyntaxTrees.FirstOrDefault()?.Options as CSharpParseOptions ?? CSharpParseOptions.Default;
-                compilation = compilation.AddSyntaxTrees(input.Right.Where(file => file.Text is not null)
-                    .Select(file => CSharpSyntaxTree.ParseText(file.Text!, parseOptions, file.Path, cancellationToken: ctx.CancellationToken)));
-                types = compilation.SyntaxTrees.SelectMany(tree =>
-                {
-                    SemanticModel model = compilation.GetSemanticModel(tree);
-                    return tree.GetRoot(ctx.CancellationToken).DescendantNodes().OfType<ClassDeclarationSyntax>()
-                        .Select(declaration => model.GetDeclaredSymbol(declaration, ctx.CancellationToken) as INamedTypeSymbol);
-                });
-            }
             var seen = new HashSet<ISymbol>(SymbolEqualityComparer.Default);
-            foreach (INamedTypeSymbol? type in types)
+            foreach (INamedTypeSymbol? type in input.Left)
             {
                 if (type is null || !seen.Add(type) || !IsComponent(type)) continue;
-                Emit(ctx, type, compilation);
+                Emit(ctx, type, input.Right);
             }
         });
     }
