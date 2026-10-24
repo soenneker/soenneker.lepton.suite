@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>false</IsPackable>
-    <LeptonPackageVersion Condition="'$(LeptonPackageVersion)' == ''">4.0.123</LeptonPackageVersion>
+    <LeptonPackageVersion Condition="'$(LeptonPackageVersion)' == ''">4.0.127</LeptonPackageVersion>
     <RestoreAdditionalProjectSources>$(MSBuildThisFileDirectory)../../artifacts;$(RestoreAdditionalProjectSources)</RestoreAdditionalProjectSources>
   </PropertyGroup>
   <ItemGroup>
