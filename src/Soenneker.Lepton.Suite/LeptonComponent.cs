@@ -21,11 +21,39 @@ public abstract partial class LeptonComponent : ComponentBase, ILeptonComponent
     /// <summary>The generated capture-unmatched parameter, if present.</summary>
     protected virtual SharedParameterProperty? GeneratedCaptureParameter => null;
 
+    /// <summary>Applies a parameter using generated typed assignments and reports capture-unmatched assignments.</summary>
+    protected virtual bool TryApplyGeneratedParameter(in ParameterValue parameter, in ParameterView parameters, out bool capture) =>
+        TryApplyGeneratedParameterDescriptor(parameter, parameters, out capture);
+
+    /// <summary>Applies a parameter through its generated descriptor, including inherited metadata.</summary>
+    protected bool TryApplyGeneratedParameterDescriptor(in ParameterValue parameter, in ParameterView parameters, out bool capture)
+    {
+        SharedParameterProperty? property = FindGeneratedParameter(parameter.Name);
+        capture = false;
+        if (property is null || !(parameter.Cascading ? property.Cascading : property.Direct))
+            return false;
+
+        capture = property.Capture;
+        if (!parameter.Cascading || !property.Direct || !HasDirectParameter(parameters, parameter.Name))
+            property.Setter(this, parameter.Value);
+        return true;
+    }
+
+    /// <summary>Checks whether a direct parameter overrides a cascading value with the same name.</summary>
+    protected static bool HasDirectParameter(ParameterView parameters, string name)
+    {
+        foreach (ParameterValue parameter in parameters)
+            if (!parameter.Cascading && string.Equals(parameter.Name, name, StringComparison.OrdinalIgnoreCase)) return true;
+        return false;
+    }
+
     /// <summary>Assigns parameters using generated setters without invoking render lifecycle callbacks.</summary>
     protected void ApplyGeneratedParameters(ParameterView parameters) => SharedParameterMetadata.Apply(this, parameters);
 
-    internal SharedParameterProperty? FindParameter(string name) => FindGeneratedParameter(name);
     internal SharedParameterProperty? CaptureParameter => GeneratedCaptureParameter;
+
+    internal bool TryApplyParameter(in ParameterValue parameter, in ParameterView parameters, out bool capture) =>
+        TryApplyGeneratedParameter(parameter, parameters, out capture);
 
     internal void ValidateGeneratedParameters()
     {

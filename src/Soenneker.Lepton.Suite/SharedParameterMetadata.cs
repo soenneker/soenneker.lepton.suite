@@ -12,17 +12,17 @@ internal static class SharedParameterMetadata
         bool explicitCapture = false;
         foreach (ParameterValue parameter in parameters)
         {
-            SharedParameterProperty? property = component.FindParameter(parameter.Name);
-            if (property is not null && (parameter.Cascading ? property.Cascading : property.Direct))
+            try
             {
-                explicitCapture |= property.Capture;
-                if (parameter.Cascading && property.Direct && HasDirectParameter(parameters, parameter.Name)) continue;
-                try { property.Setter.Invoke(component, parameter.Value); }
-                catch (Exception error)
+                if (component.TryApplyParameter(parameter, parameters, out bool captures))
                 {
-                    throw new InvalidOperationException($"Unable to set property '{parameter.Name}' on '{component.GetType().FullName}'.", error);
+                    explicitCapture |= captures;
+                    continue;
                 }
-                continue;
+            }
+            catch (Exception error)
+            {
+                throw new InvalidOperationException($"Unable to set property '{parameter.Name}' on '{component.GetType().FullName}'.", error);
             }
             if (parameter.Cascading || capture is null)
                 throw new InvalidOperationException($"Cannot supply parameter '{parameter.Name}' to '{component.GetType().FullName}'.");
@@ -34,10 +34,4 @@ internal static class SharedParameterMetadata
         capture!.Setter.Invoke(component, unmatched);
     }
 
-    private static bool HasDirectParameter(ParameterView parameters, string name)
-    {
-        foreach (ParameterValue parameter in parameters)
-            if (!parameter.Cascading && string.Equals(parameter.Name, name, StringComparison.OrdinalIgnoreCase)) return true;
-        return false;
-    }
 }

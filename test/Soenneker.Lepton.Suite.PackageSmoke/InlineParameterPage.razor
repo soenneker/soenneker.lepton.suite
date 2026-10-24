@@ -1,0 +1,17 @@
+@namespace Soenneker.Lepton.Suite.PackageSmoke
+@inherits Soenneker.Lepton.Suite.LeptonContentElement
+@typeparam TValue
+
+<p>@Value</p>
+
+@code {
+    protected override bool UseSharedParameterMetadata => true;
+
+    [Microsoft.AspNetCore.Components.Parameter]
+    public TValue? Value { get; set; }
+
+    [Microsoft.AspNetCore.Components.Parameter]
+    public int Count { get; set; }
+
+    public void Bind(Microsoft.AspNetCore.Components.ParameterView parameters) => ApplyGeneratedParameters(parameters);
+}

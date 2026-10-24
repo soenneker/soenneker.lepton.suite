@@ -11,4 +11,25 @@ component.Bind(ParameterView.FromDictionary(new Dictionary<string, object?> { [n
 if (component.Text != "bound")
     throw new InvalidOperationException("Packaged parameter generator did not bind the component parameter.");
 
-Console.WriteLine("Razor raw strings and generated parameter bindings passed.");
+var inline = new InlineParameterPage<int>();
+inline.Bind(ParameterView.FromDictionary(new Dictionary<string, object?>
+{
+    ["vAlUe"] = 42, ["Count"] = 7, ["Class"] = "inline", ["data-test"] = "captured"
+}));
+if (inline.Value != 42 || inline.Count != 7 || inline.Class != "inline" ||
+    !Equals(inline.AdditionalAttributes?["data-test"], "captured"))
+    throw new InvalidOperationException("Inline Razor generic or inherited parameter binding failed.");
+
+inline.Bind(ParameterView.FromDictionary(new Dictionary<string, object?> { ["Count"] = null }));
+if (inline.Count != 0 || inline.Value != 42)
+    throw new InvalidOperationException("Inline Razor null or omitted parameter binding failed.");
+
+var mixed = new MixedParameterPage();
+mixed.Bind(ParameterView.FromDictionary(new Dictionary<string, object?>
+{
+    [nameof(MixedParameterPage.CodeBehindText)] = "code-behind", [nameof(MixedParameterPage.InlineText)] = "inline"
+}));
+if (mixed.CodeBehindText != "code-behind" || mixed.InlineText != "inline")
+    throw new InvalidOperationException("Mixed Razor and code-behind parameter binding failed.");
+
+Console.WriteLine("Razor raw strings and generated bindings passed: code-behind, inline, mixed, generic, inherited, capture, null, omitted, case-insensitive.");

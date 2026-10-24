@@ -124,27 +124,83 @@ public sealed class ParameterGenerator : IIncrementalGenerator
             source.Append("typeof(").Append(type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)).AppendLine(");");
             if (properties.Count != 0)
             {
-                source.Append("private static readonly global::System.Collections.Generic.Dictionary<string, ").Append(Descriptor)
-                    .AppendLine("> __leptonParameters = new(global::System.StringComparer.OrdinalIgnoreCase) {");
-                foreach (IPropertySymbol property in properties)
+                for (int index = 0; index < properties.Count; index++)
                 {
+                    IPropertySymbol property = properties[index];
                     AttributeData? direct = Attribute(property, "Microsoft.AspNetCore.Components.ParameterAttribute");
                     AttributeData? cascade = Attribute(property, "Microsoft.AspNetCore.Components.CascadingParameterAttributeBase");
                     bool acceptsDirect = direct is not null && (cascade is null || cascade.AttributeClass?.ToDisplayString() == "Microsoft.AspNetCore.Components.SupplyParameterFromQueryAttribute");
                     bool capture = direct?.NamedArguments.Any(a => a.Key == "CaptureUnmatchedValues" && a.Value.Value is true) == true;
                     string name = SymbolDisplay.FormatLiteral(property.Name, true);
-                    source.Append('[').Append(name).Append("] = new(").Append(name).Append(", static (component, value) => ((")
+                    source.Append("private static readonly ").Append(Descriptor).Append(" __leptonParameter").Append(index)
+                        .Append(" = new(").Append(name).Append(", static (component, value) => ((")
                         .Append(type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)).Append(")component).@")
                         .Append(property.Name).Append(" = value is null ? default! : (")
                         .Append(property.Type.ToDisplayString(QualifiedType)).Append(")value, ")
                         .Append(cascade is not null ? "true" : "false").Append(", ").Append(acceptsDirect ? "true" : "false").Append(", ")
-                        .Append(capture ? "true" : "false").AppendLine("),");
+                        .Append(capture ? "true" : "false").AppendLine(");");
                 }
-                source.AppendLine("};");
-                source.Append("protected override ").Append(Descriptor).AppendLine("? FindGeneratedParameter(string name) => __leptonParameters.TryGetValue(name, out var parameter) ? parameter : base.FindGeneratedParameter(name);");
+                // Keep bounded lookup cost for large parameter sets; small components avoid hashing entirely.
+                if (properties.Count > 8)
+                {
+                    source.Append("private static readonly global::System.Collections.Generic.Dictionary<string, ").Append(Descriptor)
+                        .AppendLine("> __leptonParameters = new(global::System.StringComparer.OrdinalIgnoreCase) {");
+                    for (int index = 0; index < properties.Count; index++)
+                        source.Append('[').Append(SymbolDisplay.FormatLiteral(properties[index].Name, true))
+                            .Append("] = __leptonParameter").Append(index).AppendLine(",");
+                    source.AppendLine("};");
+                    source.Append("protected override ").Append(Descriptor).AppendLine("? FindGeneratedParameter(string name) => __leptonParameters.TryGetValue(name, out var parameter) ? parameter : base.FindGeneratedParameter(name);");
+                    source.AppendLine("protected override bool TryApplyGeneratedParameter(in global::Microsoft.AspNetCore.Components.ParameterValue parameter, in global::Microsoft.AspNetCore.Components.ParameterView parameters, out bool capture) => TryApplyGeneratedParameterDescriptor(parameter, parameters, out capture);");
+                }
+                else
+                {
+                    source.Append("protected override ").Append(Descriptor).AppendLine("? FindGeneratedParameter(string name) {");
+                    source.AppendLine("switch (name.Length) {");
+                    foreach (var group in properties.Select((property, index) => (property, index)).GroupBy(item => item.property.Name.Length).OrderBy(group => group.Key))
+                    {
+                        source.Append("case ").Append(group.Key).AppendLine(":");
+                        foreach (var item in group)
+                            source.Append("if (global::System.String.Equals(name, ")
+                                .Append(SymbolDisplay.FormatLiteral(item.property.Name, true))
+                                .Append(", global::System.StringComparison.OrdinalIgnoreCase)) return __leptonParameter").Append(item.index).AppendLine(";");
+                        source.AppendLine("break;");
+                    }
+                    source.AppendLine("} return base.FindGeneratedParameter(name); }");
+                }
                 if (captureName is not null && properties.Any(p => p.Name == captureName))
-                    source.Append("protected override ").Append(Descriptor).Append("? GeneratedCaptureParameter => __leptonParameters[")
-                        .Append(SymbolDisplay.FormatLiteral(captureName, true)).AppendLine("];");
+                    source.Append("protected override ").Append(Descriptor).Append("? GeneratedCaptureParameter => __leptonParameter")
+                        .Append(properties.FindIndex(property => property.Name == captureName)).AppendLine(";");
+
+                if (properties.Count <= 8)
+                {
+                    source.AppendLine("protected override bool TryApplyGeneratedParameter(in global::Microsoft.AspNetCore.Components.ParameterValue parameter, in global::Microsoft.AspNetCore.Components.ParameterView parameters, out bool capture) {");
+                    source.AppendLine("capture = false; switch (parameter.Name.Length) {");
+                    foreach (var group in properties.GroupBy(property => property.Name.Length).OrderBy(group => group.Key))
+                    {
+                        source.Append("case ").Append(group.Key).AppendLine(":");
+                        foreach (IPropertySymbol property in group)
+                        {
+                            AttributeData? direct = Attribute(property, "Microsoft.AspNetCore.Components.ParameterAttribute");
+                            AttributeData? cascade = Attribute(property, "Microsoft.AspNetCore.Components.CascadingParameterAttributeBase");
+                            bool acceptsDirect = direct is not null && (cascade is null || cascade.AttributeClass?.ToDisplayString() == "Microsoft.AspNetCore.Components.SupplyParameterFromQueryAttribute");
+                            bool capture = direct?.NamedArguments.Any(a => a.Key == "CaptureUnmatchedValues" && a.Value.Value is true) == true;
+                            source.Append("if (global::System.String.Equals(parameter.Name, ").Append(SymbolDisplay.FormatLiteral(property.Name, true))
+                                .AppendLine(", global::System.StringComparison.OrdinalIgnoreCase)) {");
+                            if (cascade is null) source.AppendLine("if (parameter.Cascading) return false;");
+                            else
+                            {
+                                if (!acceptsDirect) source.AppendLine("if (!parameter.Cascading) return false;");
+                                if (direct is not null) source.AppendLine("if (parameter.Cascading && HasDirectParameter(parameters, parameter.Name)) return true;");
+                            }
+                            source.Append('@').Append(property.Name).Append(" = parameter.Value is null ? default! : (")
+                                .Append(property.Type.ToDisplayString(QualifiedType)).AppendLine(")parameter.Value;");
+                            if (capture) source.AppendLine("capture = true;");
+                            source.AppendLine("return true; }");
+                        }
+                        source.AppendLine("break;");
+                    }
+                    source.AppendLine("} return base.TryApplyGeneratedParameter(parameter, parameters, out capture); }");
+                }
             }
         }
         foreach (INamedTypeSymbol _ in containers) source.AppendLine("}");
