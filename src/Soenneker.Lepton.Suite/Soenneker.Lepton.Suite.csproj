@@ -49,7 +49,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.Components" Version="10.0.13" />
+        <PackageReference Include="Microsoft.AspNetCore.Components" Version="10.0.14" />
         <PackageReference Include="Soenneker.Atomics.ValueResources" Version="4.0.1" />
         <PackageReference Include="Soenneker.Atomics.ValueBools" Version="4.0.54" />
         <PackageReference Include="Soenneker.Extensions.String" Version="4.0.799" />
