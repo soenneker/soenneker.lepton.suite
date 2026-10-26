@@ -2,7 +2,7 @@
 
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net10.0</TargetFramework>
+        <TargetFramework>net11.0</TargetFramework>
         <Nullable>enable</Nullable>
         <Platforms>AnyCPU</Platforms>
         <IsAotCompatible>true</IsAotCompatible>
@@ -15,7 +15,7 @@
         <Description>Fundamental building blocks for Blazor.</Description>
         <PackageDescription>Fundamental building blocks for Blazor.</PackageDescription>
         <Title>Soenneker.Lepton.Suite</Title>
-        <Version Condition="'$(BUILD_VERSION)' == ''">1.0.0</Version>
+        <Version Condition="'$(BUILD_VERSION)' == ''">11.0.0</Version>
         <Version Condition="'$(BUILD_VERSION)' != ''">$(BUILD_VERSION)</Version>
         <AssemblyName>Soenneker.Lepton.Suite</AssemblyName>
         <PackageId>Soenneker.Lepton.Suite</PackageId>
@@ -49,7 +49,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.Components" Version="10.0.14" />
+        <PackageReference Include="Microsoft.AspNetCore.Components" Version="11.0.0-rc.3.26522.148" />
         <PackageReference Include="Soenneker.Atomics.ValueResources" Version="4.0.1" />
         <PackageReference Include="Soenneker.Atomics.ValueBools" Version="4.0.54" />
         <PackageReference Include="Soenneker.Extensions.String" Version="4.0.799" />
