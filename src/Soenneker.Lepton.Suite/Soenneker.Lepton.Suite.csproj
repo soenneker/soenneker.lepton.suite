@@ -52,7 +52,7 @@
         <PackageReference Include="Microsoft.AspNetCore.Components" Version="11.0.0-rc.3.26522.148" />
         <PackageReference Include="Soenneker.Atomics.ValueResources" Version="11.0.2" />
         <PackageReference Include="Soenneker.Atomics.ValueBools" Version="11.0.55" />
-        <PackageReference Include="Soenneker.Extensions.String" Version="4.0.800" />
+        <PackageReference Include="Soenneker.Extensions.String" Version="11.0.807" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\Soenneker.Lepton.Gen.Parameters\Soenneker.Lepton.Gen.Parameters.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
