@@ -27,7 +27,7 @@
         <ProjectReference Include="..\..\src\Soenneker.Lepton.Suite\Soenneker.Lepton.Suite.csproj" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="bunit" Version="2.13.3" />
+        <PackageReference Include="bunit" Version="2.14.0" />
         <PackageReference Include="AwesomeAssertions" Version="9.6.0" />
     </ItemGroup>
     <ItemGroup>
